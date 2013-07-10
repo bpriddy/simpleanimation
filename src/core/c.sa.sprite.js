@@ -12,7 +12,8 @@
 	var Current_Frame = 1;
 	var Current_Row = 1;
 	var animationInterval;
-	var options;
+	var Reverse = "false";
+	_options = _options || {};
 	
 	
 	var spriteIinitialize = function(_options, callback) {
@@ -37,19 +38,19 @@
 			animationCompleteCallback:function() {}
 			};
 		    
-		options = mergeObjects(defaults, _options);
+		_inst.options = mergeObjects(defaults, _options);
 		if(callback) {
-			options.loadCallBack = callback;
+			_inst.options.loadCallBack = callback;
 		}
 
 		// log(options.spriteElement)
 		
-		Element = options.spriteElement;
+		Element = _inst.options.spriteElement;
 		// if(options.loadingElement!=null) {
 		// 	Element.append($(options.loadingElement))
 		// }
 		
-		//Element.data("spriteAnimation", _inst)
+		Element.spriteAnimation = _inst;
 		
 		//var BGImage = new Image();
 		//var BGImage = $$("<img />");
@@ -59,38 +60,56 @@
 		//	options.loadingElement.show();
 		//};
 		if(Element) {
-			console.log(Element)
 			Element.style.backgroundImage = "url("+_inst.options.src+")";
 		}
 
 	};
 			
 	var animate = function() {
-		log('animate', Current_Frame)
 		// if(options.endFrame!=null) {
 		// 	Element.find(".end_frame").hide()
 		// }
-		log(options.cell_width)
-    	var xPos = -( (Current_Frame-1) * options.cell_width );
-    	var yPos = -( (Current_Row-1) * options.cell_height );
-    	var el = $$(Element) 
+
+    	var xPos = -( (Current_Frame-1) * _inst.options.cell_width );
+    	var yPos = -( (Current_Row-1) * _inst.options.cell_height );
+    	var el = Element 
     	el.style['backgroundPosition'] = xPos + 'px ' + yPos + 'px';
     	
-    	if( Current_Frame <= options.cols ) {
-    		Current_Frame++;
-    	} else if(options.loop==true) {
-    		Current_Frame = 1
-    	} else {
-    		if(options.endFrame!=null) {
-    			el.style['background-position'] = options.cell_width + 'px';
-				//$$(".end_frame", Element).style.display = "block"
-			}
-    		clearInterval(animationInterval);
-    	};
+    	if(Reverse != "true") {
+	    	if( Current_Frame <= _inst.options.cols ) {
+	    		Current_Frame++;
+	    	} else if(_inst.options.loop==true) {
+	    		Current_Frame = 1
+	    	} else {
+	    		console.log('we should end here')
+	    		if(_inst.options.endFrame!=null) {
+	    			el.style['background-position'] = _inst.options.cell_width + 'px';
+					//$$(".end_frame", Element).style.display = "block"
+				}
+	    		clearInterval(animationInterval);
+	    	};
 
-    	if(options.stopAt && Current_Frame >= options.stopAt) {
-    		clearInterval(animationInterval);
-    	}
+	    	if(_inst.options.stopAt && Current_Frame >= _inst.options.stopAt) {
+	    		clearInterval(animationInterval);
+	    	}
+	    } else {
+	    	if( Current_Frame > 0 ) {
+	    		Current_Frame--;
+	    	} else if(_inst.options.loop==true) {
+	    		Current_Frame = _inst.options.cols
+	    	} else {
+	    		console.log('we should end here')
+	   //  		if(_inst.options.endFrame!=null) {
+	   //  			el.style['background-position'] = _inst.options.cell_width + 'px';
+				// 	//$$(".end_frame", Element).style.display = "block"
+				// }
+	    		clearInterval(animationInterval);
+	    	};
+
+	    	if(_inst.options.stopAt && Current_Frame <= _inst.options.stopAt) {
+	    		clearInterval(animationInterval);
+	    	}
+	    }
 	};
 
 	
@@ -144,18 +163,26 @@
 	};
 		
 	this.start = function() {
-		animationInterval=setInterval( function(){animate(); } , parseInt(1000 / options.fps) );
+		clearInterval(animationInterval);
+		animationInterval=setInterval( function(){animate(); } , parseInt(1000 / _inst.options.fps) );
 	};	
 	this.pause = function() {
 		clearInterval(animationInterval);
 	};
 	this.reset = function() {
     	Current_Frame = 1;
-    	var xPos = -( (Current_Frame-1) * options.cell_width );
-    	var yPos = -( (Current_Row-1) * options.cell_height );
+    	var xPos = -( (Current_Frame-1) * _inst.options.cell_width );
+    	var yPos = -( (Current_Row-1) * _inst.options.cell_height );
     	var el = $$(Element)
 		el.style['background-position'] = xPos + 'px ' + yPos + 'px'; 
 	};	
+	this.reverse = function(bool, autoplay) {
+		Reverse = bool;
+		if(autoplay == "true") {
+			clearInterval(animationInterval);
+			animationInterval=setInterval( function(){animate(); } , parseInt(1000 / _inst.options.fps) );
+		}
+	};
 	this.element = function() {
 		return Element;
 	};
@@ -164,14 +191,14 @@
 	};
 	this.goToFrame = function(num) {
 		if(num<1) { num = 1 };
-		if(num>options.cols) { num = options.cols}
+		if(num>_inst.options.cols) { num = _inst.options.cols}
 		log('gotoframe', num)
 		Current_Frame = parseInt(num);
 		animate()
 		return Element;
 	};
 	this.step = function() {
-		if(options.cols>Current_Frame+1) {
+		if(_inst.options.cols>Current_Frame+1) {
 			Current_Frame++;
 			animate()
 		}
