@@ -1,0 +1,1 @@
+var bobbyJSON = [ { "element": ".ribbon", "values": {"undefined":{"s":0,"e":10000}}, "startend": {"s":0,"e": 1000}, "unit": "px", "easing": "easeInOutQuad" },  ];
